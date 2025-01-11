@@ -114,6 +114,10 @@ export interface gptServerType{
     KLING_KEY:string
     PIKA_SERVER:string
     PIKA_KEY:string
+    UDIO_SERVER:string
+    UDIO_KEY:string
+    PIXVERSE_SERVER:string
+    PIXVERSE_KEY:string
     IS_SET_SYNC?:boolean
     GPTS_GX?:boolean
     IS_LUMA_PRO?:boolean
@@ -123,7 +127,9 @@ export interface gptServerType{
     TAB_VIDEO?:string
     TTS_VOICE?:string
     REALTIME_SYSMSG?:string
+    REALTIME_MODEL?:string
     REALTIME_IS_WHISPER?:boolean 
+    TAB_MUSIC?:string
 
 }
 
@@ -151,7 +157,11 @@ let v:gptServerType={
         KLING_KEY:'',
         PIKA_SERVER:'',
         PIKA_KEY:'',
-        TTS_VOICE:'alloy'
+        TTS_VOICE:'alloy',
+        UDIO_SERVER:'',
+        UDIO_KEY:'',
+        PIXVERSE_SERVER:'',
+        PIXVERSE_KEY:''
     }
     return v ;
 }

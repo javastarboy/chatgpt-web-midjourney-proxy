@@ -1,7 +1,9 @@
 import { gptServerStore, homeStore, useAuthStore } from "@/store";
 import { mlog } from "./mjapi";
-import { KlingTask, klingStore } from "./klingStore";
+import { pixverseRep, pixverseStore, pixverseTask } from "./pixverseStore";
 import { sleep } from "./suno";
+// import { KlingTask, klingStore } from "./klingStore";
+// import { sleep } from "./suno";
 
 
 
@@ -21,7 +23,7 @@ function getHeaderAuthorization(){
         return headers
     }
     const bmi={
-        'Authorization': 'Bearer ' +gptServerStore.myData.KLING_KEY
+        'Authorization': 'Bearer ' +gptServerStore.myData.PIXVERSE_KEY
     }
     headers= {...headers, ...bmi }
     return headers
@@ -32,15 +34,15 @@ export const  getUrl=(url:string)=>{
     
     const pro_prefix= '';//homeStore.myData.is_luma_pro?'/pro':''
     url= url.replaceAll('/pro','')
-    if(gptServerStore.myData.KLING_SERVER  ){
+    if(gptServerStore.myData.PIXVERSE_SERVER  ){
       
-        return `${ gptServerStore.myData.KLING_SERVER}${pro_prefix}/kling${url}`;
+        return `${ gptServerStore.myData.PIXVERSE_SERVER}${pro_prefix}/pixverse${url}`;
     }
-    return `${pro_prefix}/kling${url}`;
+    return `${pro_prefix}/pixverse${url}`;
 }
 
 
-export const klingFetch=(url:string,data?:any,opt2?:any )=>{
+export const pixFetch=(url:string,data?:any,opt2?:any )=>{
     mlog('runwayFetch', url  );
     let headers= opt2?.upFile?{}: {'Content-Type':'application/json'}
      
@@ -91,36 +93,30 @@ export const klingFetch=(url:string,data?:any,opt2?:any )=>{
 
 }
 
-export const klingFeed= async(id:string,cat:string,prompt:string)=>{
-    const sunoS = new klingStore();
-    let url= '/v1/images/generations/' //images或videos
-    if (cat=='text2video'){
-        url='/v1/videos/text2video/';
-    }
-    if(cat=='image2video'){
-        url='/v1/videos/image2video/';
-    }
-    url= url+id;
+export const pixFeed= async( id:number)=>{
+    const sunoS = new pixverseStore();
+    let url= `/feed/${id}`;
     for(let i=0; i<200;i++){
-        try{
+         try{
             
-            let a= await klingFetch( url )
-            let task= a  as KlingTask;
-            task.last_feed=new Date().getTime()
-            task.cat= cat
-            if(prompt){
-              task.prompt= prompt
+            let a= await pixFetch( url )
+            //let task= a  as KlingTask;
+            if(a.ErrCode==0 && a.Resp){
+            //task.last_feed=new Date().getTime()
+                let d= a.Resp as pixverseRep
+                const task:pixverseTask={ video_id:id,last_feed:new Date().getTime(), data:d } 
+                sunoS.save( task )
+                homeStore.setMyData({act:'PixFeed'});
+                mlog('pixFetch', a )
+                if (d.video_status==1){
+                    break;
+                }
+                
             }
-            //ss.save( task )
-            //mlog("a",a  )
-            sunoS.save( task )
-            homeStore.setMyData({act:'KlingFeed'});
-            if(  task.data.task_status =='failed' || 'succeed'== task.data.task_status ){
-                break;
-            }
-        }catch(e){
-            break;
-        }
+         }catch(e){
+         }
         await sleep(5200)
     }
+
+
 }
